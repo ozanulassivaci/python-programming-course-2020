@@ -1,0 +1,27 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Django
+*.log
+db.sqlite3
+staticfiles/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large binaries and datasets excluded from version control
+# (see README for how to obtain them)
+*.exe
+src/16-pandas/datasets/youtube-ing.csv
