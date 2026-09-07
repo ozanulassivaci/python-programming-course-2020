@@ -1,0 +1,11 @@
+1- Get the first 10 records.
+2- How many records are there in total?
+3- What is the average salary across all players?
+4- What is the highest salary?
+5- Who is the player earning the highest salary?
+6- List the name and team of players aged 20-25, sorted in descending order.
+7- Which team does the player named "John Holland" play for?
+8- What is the average salary of players, grouped by team?
+9- How many different teams are there?
+10- How many players does each team have?
+11- Find the records where the name contains "and".

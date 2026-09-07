@@ -1,0 +1,16 @@
+1- Get the first 10 records.
+2- Get the second group of 5 records.
+3- Find the column names in the dataset and how many there are.
+4- Drop the columns listed below and list the remaining columns.
+(thumbnail_link,comments_disabled,ratings_disabled,video_error_or_removed,description)
+5- Find the average number of likes and dislikes.
+6- Get the like and dislike columns for the first 50 videos.
+7- Which video has the most views?
+8- Which video has the fewest views?
+9- Which are the top 10 most-viewed videos?
+10- List the average likes per category, sorted.
+11- Sort the comment counts per category from highest to lowest.
+12- How many videos are there in each category?
+13- Show the title length of each video in a new column.
+14- Show the number of tags used for each video in a new column.
+15- List the most popular videos (by like/dislike ratio).
