@@ -1,3 +1,10 @@
+{# LEARNER NOTE: {% extends 'layout.html' %} must be the very first tag in
+   the file -- it makes this a "child" template that reuses layout.html's
+   <head>, navbar and footer, and only supplies content for layout.html's
+   {% block content %} slot below. {% load humanize %} makes the
+   `timesince` filter (django.contrib.humanize, enabled in
+   INSTALLED_APPS in settings.py) available, used further down to turn a
+   raw datetime into a friendly "3 days" style string. #}
 {% extends 'layout.html' %}
 
 {% load static %}
@@ -16,22 +23,47 @@
 <div class="row">
     <div class="col-md-12">
 
+        {# `movies` here is exactly the QuerySet the index() view in
+           movies/views.py passed in via context = {'movies': movies}.
+           {% if movies %} treats an empty QuerySet as falsy (so the "No
+           Movies" branch below shows when there are none), and
+           {% for movie in movies %} iterates it, running the actual
+           database query and giving one Movie model instance per loop
+           as `movie`. #}
         {% if movies %}
             {% for movie in movies %}
                 <div class="card mb-3">
                 <div class="row">
                     <div class="col-md-3">
+                        {# movie.get_image_path is a method on the Movie
+                           model (movies/models.py) -- Django's template
+                           language calls it automatically since it takes
+                           no extra arguments, turning e.g. "1.jpg" into
+                           "/img/1.jpg", which {% static %} then resolves
+                           to the real /static/img/1.jpg URL. #}
                         <img class="card-img" src="{% static movie.get_image_path %}" alt="">
                     </div>
                     <div class="col-md-9">
                         <div class="card-body">
-                            <div class="card-title"> 
+                            <div class="card-title">
+                                {# {% url 'detail' movie.id %} builds the
+                                   link to this movie's detail page by
+                                   filling movie.id into the <int:movie_id>
+                                   slot from movies/urls.py's 'detail'
+                                   pattern -- e.g. movie.id == 2 produces
+                                   "/movies/2". #}
                                 <a href="{% url 'detail' movie.id %}"> {{ movie.name }}</a>
                              </div>
                             <p class="card-text">
-                                    {{ movie.description }} 
+                                    {{ movie.description }}
                             </p>
                             <p class="card-text">
+                                {# The `|` pipes movie.created_date (a
+                                   DateTimeField value) through the
+                                   `timesince` filter from django.contrib.
+                                   humanize, turning a raw timestamp into a
+                                   human-friendly relative string like
+                                   "3 days" instead of a full datetime. #}
                                 <small class="text-muted">{{ movie.created_date | timesince }}</small>
                             </p>
                         </div>

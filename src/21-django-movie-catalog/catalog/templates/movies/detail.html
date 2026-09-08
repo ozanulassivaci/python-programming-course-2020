@@ -3,6 +3,10 @@
 {% load static %}
 
 {% block content %}
+    {# `movie` here is the single Movie instance the detail() view in
+       movies/views.py fetched with get_object_or_404(Movie, pk=movie_id)
+       and passed in as context = {'movie': movie} -- unlike list.html,
+       there's no loop, just direct field access. #}
     <div class="row">
         <div class="col-md-3">
             <img class="card-img" src="{% static movie.get_image_path %}" alt="">

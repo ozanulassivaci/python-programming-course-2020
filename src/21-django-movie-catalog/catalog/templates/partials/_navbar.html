@@ -1,9 +1,18 @@
+{# LEARNER NOTE: {% url 'index' %} looks up the URL pattern named
+   'index' (in pages/urls.py) and outputs its actual path -- this is
+   the template-side equivalent of redirect('index') in a view, and it
+   means if the URL for 'index' ever changed in urls.py, every {% url %}
+   reference here would still resolve correctly without editing this
+   file. `request.path` (available thanks to the 'request' context
+   processor in settings.py) is the current URL path as a plain string,
+   used below just to decide which nav link should get the "active"
+   Bootstrap styling. #}
 <header>
         <div class="navbar navbar-expand-sm bg-primary navbar-dark">
             <div class="container">
                 <a href="{% url 'index' %}" class="navbar-brand">Movie App</a>
                 <ul class="navbar-nav mr-auto">
-                    <li 
+                    <li
                         {% if request.path == '/' %}
                             class="nav-item active"
                         {% else %}
@@ -33,14 +42,31 @@
                 </ul>
                 <ul class="navbar-nav">
 
-                    {% if user.is_authenticated %}    
+                    {# `user` is also supplied by the 'auth' context
+                       processor (settings.py) -- it's either the logged-in
+                       django.contrib.auth User (from request.user, set by
+                       AuthenticationMiddleware) or Django's built-in
+                       AnonymousUser when nobody is logged in.
+                       is_authenticated is True only for a real logged-in
+                       user, which is what picks between the two branches
+                       below. #}
+                    {% if user.is_authenticated %}
                         <li class="nav-item">
+                             {# Logout is intentionally a POST, not a plain
+                                link -- see user/views.py's logout(), which
+                                only handles request.method == 'POST'. This
+                                anchor just triggers a hidden form's submit
+                                via JS instead of navigating directly, and
+                                {% csrf_token %} inserts the hidden token
+                                Django's CsrfViewMiddleware (settings.py)
+                                requires on every POST form, to prove the
+                                submission really came from this site. #}
                              <a  href="javascript:{document.getElementById('logout').submit()}" class="nav-link">({{ user.username }}) Logout</a>
                              <form action="{% url 'logout' %}" method="POST" id="logout">
                                  {%csrf_token%}
-                                  <input type="hidden">  
+                                  <input type="hidden">
                              </form>
-                        </li>  
+                        </li>
                     {% else %}
                         <li 
                         {% if 'login' in request.path %} 

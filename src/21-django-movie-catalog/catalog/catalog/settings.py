@@ -8,11 +8,34 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
+
+--------------------------------------------------------------------------
+LEARNER NOTE: project vs. app
+--------------------------------------------------------------------------
+In Django there is exactly one "project" per site (here it's called
+"catalog") and it can contain many "apps". The project is the container:
+it holds the top-level settings (this file), the top-level URL routing
+(catalog/urls.py) and the WSGI entry point (catalog/wsgi.py) that a web
+server uses to actually run the site. An "app" is a self-contained unit
+of functionality with its own models, views, urls, templates and admin
+registration -- in this project the apps are "pages" (static pages like
+the home page), "movies" (the movie catalog itself) and "user" (login,
+registration, logout). Apps are meant to be reusable/pluggable: you could
+in theory drop the "movies" app into a completely different project.
+Every app has to be listed in INSTALLED_APPS below before Django will
+pick up its models, templates, template tags, etc.
 """
 
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+# BASE_DIR is the absolute path to the folder that contains manage.py (the
+# project root). __file__ is this settings.py file; os.path.abspath makes
+# sure it's a full path, and each os.path.dirname(...) call walks one
+# folder up (settings.py -> catalog/ -> project root). Every other path in
+# this file (the database file, the templates folder, the static folder)
+# is built starting from BASE_DIR so the project still works no matter
+# where on disk it's checked out.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -20,16 +43,43 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY is used internally by Django for things like signing session
+# cookies and password-reset tokens. If it leaks, an attacker could forge
+# those. django-admin normally generates a long random string here; in a
+# real deployment this should be read from an environment variable instead
+# of being hard-coded in a file that ends up in version control.
 SECRET_KEY = 'django-insecure-replace-this-with-your-own-secret-key-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# With DEBUG = True, Django shows detailed error pages (full tracebacks,
+# local variables, your source code) whenever something crashes -- great
+# for learning and development, but a serious information leak if it's
+# ever left on for a site the public can reach.
 DEBUG = True
 
+# ALLOWED_HOSTS restricts which "Host" header values Django will respond
+# to. Left empty like this, only requests to localhost/127.0.0.1 are
+# accepted while DEBUG = True. In production you'd list your real domain
+# names here, e.g. ['example.com', 'www.example.com'].
 ALLOWED_HOSTS = []
 
 
 # Application definition
 
+# INSTALLED_APPS tells Django which apps are "turned on" for this project.
+# This is what makes Django look inside each app's models.py (to build
+# database tables), templates folder (to find .html files) and so on.
+# The first three entries are the local apps that make up this project
+# (their names match the folder names next to this settings.py file);
+# everything below them is a built-in app that ships with Django itself:
+#   - django.contrib.admin        the auto-generated admin website at /admin
+#   - django.contrib.auth         user accounts, login/logout, permissions
+#   - django.contrib.contenttypes a framework auth and admin build on top of
+#   - django.contrib.sessions     per-visitor server-side storage (login state)
+#   - django.contrib.messages     the one-time "flash" notifications used by
+#                                  messages.add_message()/messages.success() etc.
+#   - django.contrib.staticfiles  collects/serves CSS, JS and images
+#   - django.contrib.humanize     template filters for human-friendly numbers/dates
 INSTALLED_APPS = [
     'pages',
     'movies',
@@ -43,6 +93,19 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 ]
 
+# MIDDLEWARE is a pipeline that every request passes through on its way in,
+# and every response passes back through on its way out, in this exact
+# order (in reverse, on the way out). Each entry does one focused job:
+#   - SecurityMiddleware        adds a handful of security-related HTTP headers
+#   - SessionMiddleware         attaches request.session, backed by a cookie
+#   - CommonMiddleware          general housekeeping (e.g. URL normalization)
+#   - CsrfViewMiddleware        protects POST forms against cross-site request forgery
+#   - AuthenticationMiddleware  attaches request.user, based on the session
+#   - MessageMiddleware         makes the one-time flash messages available on the request
+#   - XFrameOptionsMiddleware   stops the site being embedded in a hostile <iframe>
+# This is exactly why request.user and request.session "just work" inside
+# any view in this project without you having to set them up yourself --
+# the middleware above already did it before your view function ran.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,14 +116,39 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ROOT_URLCONF points Django at the Python module that holds the top-level
+# urlpatterns list -- here that's catalog/urls.py. Every incoming request
+# starts by being matched against that file's urlpatterns.
 ROOT_URLCONF = 'catalog.urls'
 
+# TEMPLATES configures Django's template engine -- the system that turns
+# .html files containing {{ variable }} placeholders and {% tag %} logic
+# into the final HTML sent to the browser.
 TEMPLATES = [
     {
+        # Use Django's own template language (as opposed to e.g. Jinja2).
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # DIRS is an extra list of folders to search for templates, in
+        # addition to each app's own templates/ folder. Here it points at
+        # the project-level "templates" folder, which is why a shared file
+        # like templates/layout.html can be found even though it doesn't
+        # live inside any single app.
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        # APP_DIRS = True tells Django to also look inside every installed
+        # app's own "<app>/templates/" folder automatically. That's how
+        # render(request, 'movies/list.html', ...) finds a template even
+        # though no app-specific templates folder is listed in DIRS above.
         'APP_DIRS': True,
         'OPTIONS': {
+            # Context processors quietly add extra variables to *every*
+            # template's context, so you don't have to pass them manually
+            # from every single view. Thanks to these four, every template
+            # in this project automatically has access to things like
+            # `request`, `user` (the logged-in user, or an "anonymous" user
+            # object) and the queued-up messages from the messages
+            # framework -- which is exactly how partials/_alert.html and
+            # partials/_navbar.html can reference {{ user }} and the
+            # messages without any view passing them in explicitly.
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -71,12 +159,21 @@ TEMPLATES = [
     },
 ]
 
+# WSGI_APPLICATION points at the callable a production web server (or
+# manage.py runserver, during development) uses to hand HTTP requests to
+# Django. See catalog/wsgi.py for what that callable actually is.
 WSGI_APPLICATION = 'catalog.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+# DATABASES describes the database connection(s) Django's ORM (the layer
+# that turns Python code like Movie.objects.all() into SQL queries) should
+# use. SQLite stores the whole database as a single file on disk (here,
+# db.sqlite3 next to manage.py) which needs no separate database server to
+# install -- perfect for learning and small projects, though a real
+# production site would typically switch ENGINE to PostgreSQL or MySQL.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -88,6 +185,11 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
+# These validators run automatically whenever a user sets or changes a
+# password (for example through django.contrib.auth's User.objects.
+# create_user, used in user/views.py) and reject weak passwords before
+# they're saved: too similar to the username/email, too short, a common
+# password from a known list, or made up entirely of digits.
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -107,28 +209,71 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
+# LANGUAGE_CODE is the default language Django uses for translating its
+# own built-in strings (like admin labels) and for locale-aware formatting.
 LANGUAGE_CODE = 'tr'
 
+# TIME_ZONE is the zone Django assumes when displaying datetimes (and, if
+# USE_TZ were False, when saving them). Combined with USE_TZ = True below,
+# Django actually *stores* datetimes in the database as UTC and only
+# converts to this zone for display -- which avoids a whole class of bugs
+# around daylight saving time and servers in different time zones.
 TIME_ZONE = 'EUROPE/ISTANBUL'
 
+# USE_I18N turns on Django's translation machinery (so {% trans %} tags
+# and translated strings would work if this project defined any).
 USE_I18N = True
 
+# USE_L10N turns on locale-aware formatting of numbers and dates (e.g.
+# using the date format conventional for LANGUAGE_CODE instead of a fixed
+# one).
 USE_L10N = True
 
+# USE_TZ = True makes all datetimes in this project "timezone-aware" and
+# stored in UTC internally -- this is what makes fields like Movie's
+# created_date (auto_now_add=True, see movies/models.py) safe to compare
+# and sort regardless of the server's local time zone.
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
+# STATIC_URL is the URL *prefix* the browser uses to request static
+# assets -- it's why templates reference things like
+# "{% static 'css/bootstrap.min.css' %}" and the browser ends up fetching
+# them from a path starting with /static/.
 STATIC_URL = '/static/'
 
+# STATICFILES_DIRS lists extra folders (besides each app's own "static/"
+# subfolder) that Django's static-file finders should search. Here it's
+# the project-level "static" folder, which is where this project's CSS,
+# JS and images actually live (see catalog/static/).
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
 # messages framework
-
+# https://docs.djangoproject.com/en/2.2/ref/contrib/messages/
+#
+# The messages framework lets a view queue up a short one-time
+# notification (e.g. "Logged in successfully.") that survives a redirect
+# and is displayed once on the very next page, then discarded. Views in
+# this project call messages.add_message(request, messages.SUCCESS, ...)
+# / messages.ERROR / messages.WARNING (see user/views.py); those queued
+# messages are exposed to every template through the context processor
+# configured above, and partials/_alert.html is what actually loops over
+# them with {% for message in messages %} and renders each one as a
+# Bootstrap alert box.
+#
+# Each message carries a "level" (SUCCESS, ERROR, WARNING, ...). By
+# default each level maps to a CSS class matching its name (e.g. the
+# WARNING level renders as class="warning"), but Bootstrap's alert
+# classes are actually named "alert-success", "alert-danger", etc. -- so
+# MESSAGE_TAGS below remaps the ERROR level specifically to the string
+# 'danger', so that a message.tags of "danger" combines with the
+# "alert-" prefix in the template to produce Bootstrap's "alert-danger"
+# class instead of a non-existent "alert-error".
 from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',

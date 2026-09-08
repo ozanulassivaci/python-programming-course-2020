@@ -9,6 +9,9 @@
                 <h4>Register</h4>
             </div>
             <div class="card-body">
+                {# Same POST + {% csrf_token %} pattern as templates/user/
+                   login.html -- see there, and user/views.py's register()
+                   for what happens with these fields after submit. #}
                 <form action="{% url 'register' %}" method="POST">
                     {% csrf_token %}
                     <div class="form-group">

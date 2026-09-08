@@ -9,6 +9,14 @@
                     <h4>Login</h4>
                 </div>
                 <div class="card-body">
+                    {# This form POSTs back to the same 'login' URL, where
+                       user/views.py's login() view reads request.POST
+                       (matched by each input's `name` attribute below) --
+                       see that view for the full authenticate()/login()
+                       flow. {% csrf_token %} is required on every POST
+                       form in Django; without it, CsrfViewMiddleware
+                       (settings.py) would reject the submission as a
+                       potential cross-site request forgery. #}
                     <form action="{% url 'login' %}" method="POST">
                         {% csrf_token %}
                         <div class="form-group">

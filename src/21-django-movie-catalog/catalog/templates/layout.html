@@ -1,3 +1,8 @@
+{# LEARNER NOTE: this is the "base" template every other page extends.
+   {% load static %} makes the {% static %} tag available in this file --
+   it turns a path relative to STATICFILES_DIRS/an app's static folder
+   (settings.py) into the actual /static/... URL the browser should
+   request, so these links keep working even if STATIC_URL ever changes. #}
 {% load static %}
 
 <!DOCTYPE html>
@@ -12,17 +17,27 @@
 </head>
 <body>
 
+    {# {% include %} pulls in another template's content in place, as if
+       it were pasted right here -- it's how the navbar and footer are
+       shared across every page without copy-pasting their HTML into
+       each template. #}
     {% include 'partials/_navbar.html' %}
-    
+
     <main>
         {% include 'partials/_alert.html' %}
-        <div class="container mt-4">            
+        <div class="container mt-4">
+           {# {% block content %}...{% endblock %} defines a named "slot".
+              A child template does {% extends 'layout.html' %} at the top
+              and then its own {% block content %}...{% endblock %} to fill
+              in just this slot, while everything else in this file (the
+              <head>, navbar, footer, script tags) is reused unchanged.
+              See templates/movies/list.html for an example child. #}
            {% block content %}
            {% endblock %}
         </div>
     </main>
 
-    {% include 'partials/_footer.html' %}   
+    {% include 'partials/_footer.html' %}
 
 
     <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>

@@ -1,6 +1,22 @@
+{# LEARNER NOTE: `messages` here isn't passed in by any view -- it's
+   injected into every template's context automatically by the
+   'django.contrib.messages.context_processors.messages' entry in
+   settings.py's TEMPLATES config. It holds whatever was queued up with
+   messages.add_message()/messages.success()/etc. in a view (see
+   user/views.py) before a redirect(). {% if messages %} skips this whole
+   block when nothing's queued, and {% for message in messages %} renders
+   one Bootstrap alert per queued message. Iterating over `messages` here
+   is also what "consumes" it -- once this template has been rendered,
+   the queue is cleared and won't show again on the next page. #}
 {% if messages %}
     {% for message in messages %}
     <div class="container mt-2">
+        {# message.tags is the CSS-class-ish string for this message's
+           level (e.g. "success", "warning", or "danger" -- the latter via
+           the MESSAGE_TAGS remap for ERROR in settings.py), so this
+           combines with the "alert-" prefix to pick the matching
+           Bootstrap alert color (alert-success, alert-warning, ...).
+           {{ message }} prints the message text itself. #}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
             {{ message }}
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
