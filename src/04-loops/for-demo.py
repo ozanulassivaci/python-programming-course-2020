@@ -1,12 +1,16 @@
 numbers = [1, 3, 5, 7, 9, 12, 19, 21]
 
 # 1- Which numbers in the list are multiples of 3?
+# "for item in some_list:" runs its indented block once per element,
+# with `item` (here `number`) bound to the current element each time.
 # for number in numbers:
 #     if (number%3==0):
 #         print(number)
 
 # 2- What is the sum of the numbers in the list?
 
+# A running total pattern: start an accumulator at 0 before the loop,
+# then add to it on every iteration.
 # total = 0
 # for number in numbers:
 #     total += number
@@ -23,6 +27,7 @@ cities = ['kocaeli', 'istanbul', 'ankara', 'izmir', 'rize']
 
 # 4- Which cities have at most 5 characters?
 
+# len(city) gives the character count of each string as the loop visits it.
 # for city in cities:
 #     if (len(city) <= 5):
 #         print(city)
@@ -36,6 +41,11 @@ products = [
 ]
 
 # 5- What is the total price of all products?
+# Looping over a list of dicts: each `product` is one dict, and
+# product['price'] reads its 'price' key. The prices are stored as
+# STRINGS here, so int(...) converts each one to a number before adding
+# it to the running total -- skipping that conversion would try to "add"
+# strings together and either fail or concatenate instead of summing.
 # total = 0
 # for product in products:
 #     price = int(product['price'])
