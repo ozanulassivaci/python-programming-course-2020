@@ -2,6 +2,12 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
+# A small calculator app: two number inputs and four operation buttons
+# (Add/Subtract/Multiply/Divide). It builds on the same ideas as
+# win-class.py (a QMainWindow subclass, widgets positioned with move(),
+# signals connected to methods), but here all four buttons share a SINGLE
+# handler method instead of each getting its own -- see calculate() below
+# for how it tells them apart.
 class MainForm(QMainWindow):
     def __init__(self):
         super(MainForm, self).__init__()
@@ -29,6 +35,11 @@ class MainForm(QMainWindow):
 
         # First time wiring up multiple buttons to the same handler and
         # telling them apart by checking self.sender().text() below.
+        # Notice all four .clicked signals are connected to the exact same
+        # method, self.calculate -- unlike win-class.py where one button had
+        # its own dedicated method. This avoids writing four nearly
+        # identical methods that each do "read two numbers, do one
+        # operation, show the result".
         self.btn_add = QtWidgets.QPushButton(self)
         self.btn_add.setText('Add')
         self.btn_add.move(150,130)
@@ -53,10 +64,24 @@ class MainForm(QMainWindow):
         self.lbl_result.setText('Result: ')
         self.lbl_result.move(150,290)
 
+    # This is the shared signal handler for all four buttons: Qt calls it
+    # every time ANY of Add/Subtract/Multiply/Divide is clicked. Since one
+    # method now has to serve four different buttons, it needs a way to
+    # know which button triggered it -- that's what self.sender() is for:
+    # inside a slot, it returns the specific widget object that emitted the
+    # signal currently being handled. Calling .text() on it gives that
+    # button's label ('Add', 'Subtract', ...), which is then used to decide
+    # which arithmetic operation to perform.
     def calculate(self):
         sender = self.sender().text()
         result = 0
 
+        # QLineEdit.text() always returns a str, even if the user typed
+        # digits, so int(...) converts each text box's contents to a whole
+        # number before doing arithmetic on them. (This will crash with a
+        # ValueError if the text isn't a valid integer -- there's no
+        # input validation here, since the example is only meant to show
+        # sender()-based dispatch.)
         if sender == 'Add':
             result = int(self.txt_number1.text()) + int(self.txt_number2.text())
         elif sender == 'Subtract':
@@ -64,6 +89,8 @@ class MainForm(QMainWindow):
         elif sender == 'Multiply':
             result = int(self.txt_number1.text()) * int(self.txt_number2.text())
         elif sender == 'Divide':
+            # Note: '/' is true division in Python 3, so this can produce a
+            # float (e.g. 7/2 == 3.5) even though the inputs are ints.
             result = int(self.txt_number1.text()) / int(self.txt_number2.text())
 
         self.lbl_result.setText('Result: '+ str(result))
